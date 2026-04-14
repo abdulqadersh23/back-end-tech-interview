@@ -9,9 +9,9 @@ devices_ids = environ.get('DEVICES_IDS_LIST').split(',')
 
 async def publish_random_data():
     """Continuously publish random data every 10 seconds."""
-    while True:
+    while True: 
         try:
-            async with aiomqtt.Client("127.0.0.1") as client:
+            async with aiomqtt.Client(hostname="mqtt", port=1883) as client:
                 print("✅ Connected to MQTT broker")
 
                 while True:

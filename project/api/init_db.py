@@ -4,7 +4,7 @@ conn = psycopg2.connect(
     host="localhost",
     database="iot_db",
     user="postgres",
-    password="password",  # غيرها إذا عندك باسورد مختلف
+    password="password",  
     port=5432
 )
 

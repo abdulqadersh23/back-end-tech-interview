@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Telemetry</title>
+
+    <style>
+        body {font-family: Arial; margin:0; background:#f4f4f4;}
+
+        .navbar {
+            background:black;
+            color:white;
+            padding:15px;
+            display:flex;
+            gap:20px;
+        }
+
+        .navbar a {color:white; text-decoration:none;}
+
+        .container {padding:20px;}
+
+        li {
+            background:white;
+            padding:10px;
+            margin:5px 0;
+            list-style:none;
+        }
+
+        button {padding:10px;}
+    </style>
+</head>
+
+<body>
+
+<div class="navbar">
+    <a href="/users-page">Users</a>
+    <a href="/devices-page">Devices</a>
+    <a href="/telemetry-page">Telemetry</a>
+    <a href="/" onclick="logout()">Logout</a>
+</div>
+
+<div class="container">
+    <h2>Telemetry</h2>
+    <button onclick="loadData()">Load Data</button>
+    <ul id="list"></ul>
+</div>
+
+<script>
+const token = localStorage.getItem("token");
+
+if (!token) {
+    window.location.href = "/";
+}
+
+async function loadData() {
+    const res = await fetch("http://localhost:5000/telemetry", {
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    const data = await res.json();
+
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    data.forEach(t => {
+        let li = document.createElement("li");
+        li.innerText = `${t.device_id} | ${t.key} = ${t.value} | ${t.timestamp}`;
+        list.appendChild(li);
+    });
+}
+
+function logout() {
+    localStorage.removeItem("token");
+}
+</script>
+
+</body>
+</html>

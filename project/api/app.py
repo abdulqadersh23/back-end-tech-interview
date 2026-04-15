@@ -1,9 +1,7 @@
-from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask import Flask, render_template
 import os
-
 
 # routes
 from routes.users import users_bp
@@ -31,9 +29,23 @@ app.register_blueprint(devices_bp)
 app.register_blueprint(telemetry_bp)
 app.register_blueprint(auth_bp)
 
+
 @app.route('/')
 def home():
     return render_template("login.html")
+
+@app.route('/users-page')
+def users_page():
+    return render_template("users.html")
+
+@app.route('/devices-page')
+def devices_page():
+    return render_template("devices.html")
+
+@app.route('/telemetry-page')
+def telemetry_page():
+    return render_template("telemetry.html")
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Devices</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: #f4f4f4;
+        }
+
+        .navbar {
+            background: black;
+            color: white;
+            padding: 15px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .form-box {
+            background: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+
+        input {
+            display: block;
+            width: 300px;
+            padding: 10px;
+            margin: 8px 0;
+        }
+
+        button {
+            padding: 8px 12px;
+            margin: 5px 5px 10px 0;
+            cursor: pointer;
+        }
+
+        li {
+            background: white;
+            margin: 8px 0;
+            padding: 12px;
+            list-style: none;
+            border-radius: 6px;
+        }
+
+        .actions button {
+            margin-right: 8px;
+        }
+
+        #msg {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="navbar">
+    <a href="/users-page">Users</a>
+    <a href="/devices-page">Devices</a>
+    <a href="/telemetry-page">Telemetry</a>
+    <a href="/" onclick="logout()">Logout</a>
+</div>
+
+<div class="container">
+    <h2>Devices</h2>
+
+    <div class="form-box">
+        <h3>Add / Update Device</h3>
+
+        <input type="hidden" id="deviceId">
+        <input type="text" id="name" placeholder="Device Name">
+        <input type="text" id="createdBy" placeholder="Created By (User ID)">
+
+        <button onclick="createDevice()">Add Device</button>
+        <button onclick="updateDevice()">Update Device</button>
+        <button onclick="clearForm()">Clear</button>
+
+        <p id="msg"></p>
+    </div>
+
+    <button onclick="loadDevices()">Load Devices</button>
+    <ul id="list"></ul>
+</div>
+
+<script>
+const token = localStorage.getItem("token");
+
+if (!token) {
+    window.location.href = "/";
+}
+
+function logout() {
+    localStorage.removeItem("token");
+}
+
+function clearForm() {
+    document.getElementById("deviceId").value = "";
+    document.getElementById("name").value = "";
+    document.getElementById("createdBy").value = "";
+    document.getElementById("msg").innerText = "";
+}
+
+async function loadDevices() {
+    const res = await fetch("http://localhost:5000/devices");
+    const data = await res.json();
+
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    data.forEach(d => {
+        let li = document.createElement("li");
+        li.innerHTML = `
+            <strong>${d.name}</strong><br>
+            ID: ${d.id}<br>
+            Created By: ${d.created_by ? d.created_by : "None"}<br>
+            Created At: ${d.created_at}<br><br>
+            <div class="actions">
+                <button onclick="editDevice('${d.id}', '${d.name}', '${d.created_by ? d.created_by : ""}')">Edit</button>
+                <button onclick="deleteDevice('${d.id}')">Delete</button>
+            </div>
+        `;
+        list.appendChild(li);
+    });
+}
+
+async function createDevice() {
+    const name = document.getElementById("name").value;
+    const createdBy = document.getElementById("createdBy").value;
+
+    const res = await fetch("http://localhost:5000/devices", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: name,
+            created_by: createdBy
+        })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        document.getElementById("msg").innerText = "Device added successfully";
+        clearForm();
+        loadDevices();
+    } else {
+        document.getElementById("msg").innerText = data.error || "Failed to add device";
+    }
+}
+
+function editDevice(id, name, createdBy) {
+    document.getElementById("deviceId").value = id;
+    document.getElementById("name").value = name;
+    document.getElementById("createdBy").value = createdBy;
+    document.getElementById("msg").innerText = "Now edit the data, then click Update Device";
+}
+
+async function updateDevice() {
+    const id = document.getElementById("deviceId").value;
+    const name = document.getElementById("name").value;
+
+    if (!id) {
+        document.getElementById("msg").innerText = "Select a device first";
+        return;
+    }
+
+    const res = await fetch(`http://localhost:5000/devices/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: name
+        })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        document.getElementById("msg").innerText = "Device updated successfully";
+        clearForm();
+        loadDevices();
+    } else {
+        document.getElementById("msg").innerText = data.error || "Failed to update device";
+    }
+}
+
+async function deleteDevice(id) {
+    const confirmDelete = confirm("Are you sure you want to delete this device?");
+    if (!confirmDelete) return;
+
+    const res = await fetch(`http://localhost:5000/devices/${id}`, {
+        method: "DELETE"
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        document.getElementById("msg").innerText = "Device deleted successfully";
+        loadDevices();
+    } else {
+        document.getElementById("msg").innerText = data.error || "Failed to delete device";
+    }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Users</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: #f4f4f4;
+        }
+
+        .navbar {
+            background: black;
+            color: white;
+            padding: 15px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .form-box {
+            background: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+
+        input {
+            display: block;
+            width: 300px;
+            padding: 10px;
+            margin: 8px 0;
+        }
+
+        button {
+            padding: 8px 12px;
+            margin: 5px 5px 10px 0;
+            cursor: pointer;
+        }
+
+        li {
+            background: white;
+            margin: 8px 0;
+            padding: 12px;
+            list-style: none;
+            border-radius: 6px;
+        }
+
+        .actions button {
+            margin-right: 8px;
+        }
+
+        #msg {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="navbar">
+    <a href="/users-page">Users</a>
+    <a href="/devices-page">Devices</a>
+    <a href="/telemetry-page">Telemetry</a>
+    <a href="/" onclick="logout()">Logout</a>
+</div>
+
+<div class="container">
+    <h2>Users</h2>
+
+    <div class="form-box">
+        <h3>Add / Update User</h3>
+
+        <input type="hidden" id="userId">
+        <input type="email" id="email" placeholder="Email">
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+
+        <button onclick="createUser()">Add User</button>
+        <button onclick="updateUser()">Update User</button>
+        <button onclick="clearForm()">Clear</button>
+
+        <p id="msg"></p>
+    </div>
+
+    <button onclick="loadUsers()">Load Users</button>
+    <ul id="list"></ul>
+</div>
+
+<script>
+const token = localStorage.getItem("token");
+
+if (!token) {
+    window.location.href = "/";
+}
+
+function logout() {
+    localStorage.removeItem("token");
+}
+
+function clearForm() {
+    document.getElementById("userId").value = "";
+    document.getElementById("email").value = "";
+    document.getElementById("username").value = "";
+    document.getElementById("password").value = "";
+    document.getElementById("msg").innerText = "";
+}
+
+async function loadUsers() {
+    const res = await fetch("http://localhost:5000/users");
+    const data = await res.json();
+
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    data.forEach(u => {
+        let li = document.createElement("li");
+        li.innerHTML = `
+            <strong>${u.username}</strong> - ${u.email}<br>
+            ID: ${u.id}<br><br>
+            <div class="actions">
+                <button onclick="editUser('${u.id}', '${u.email}', '${u.username}')">Edit</button>
+                <button onclick="deleteUser('${u.id}')">Delete</button>
+            </div>
+        `;
+        list.appendChild(li);
+    });
+}
+
+async function createUser() {
+    const email = document.getElementById("email").value;
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    const res = await fetch("http://localhost:5000/users", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            email: email,
+            username: username,
+            password: password
+        })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        document.getElementById("msg").innerText = "User added successfully";
+        clearForm();
+        loadUsers();
+    } else {
+        document.getElementById("msg").innerText = data.error || "Failed to add user";
+    }
+}
+
+function editUser(id, email, username) {
+    document.getElementById("userId").value = id;
+    document.getElementById("email").value = email;
+    document.getElementById("username").value = username;
+    document.getElementById("password").value = "";
+    document.getElementById("msg").innerText = "Now edit the data, then click Update User";
+}
+
+async function updateUser() {
+    const id = document.getElementById("userId").value;
+    const email = document.getElementById("email").value;
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    if (!id) {
+        document.getElementById("msg").innerText = "Select a user first";
+        return;
+    }
+
+    const bodyData = {};
+
+    if (email) bodyData.email = email;
+    if (username) bodyData.username = username;
+    if (password) bodyData.password = password;
+
+    const res = await fetch(`http://localhost:5000/users/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(bodyData)
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        document.getElementById("msg").innerText = "User updated successfully";
+        clearForm();
+        loadUsers();
+    } else {
+        document.getElementById("msg").innerText = data.error || "Failed to update user";
+    }
+}
+
+async function deleteUser(id) {
+    const confirmDelete = confirm("Are you sure you want to delete this user?");
+    if (!confirmDelete) return;
+
+    const res = await fetch(`http://localhost:5000/users/${id}`, {
+        method: "DELETE"
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        document.getElementById("msg").innerText = "User deleted successfully";
+        loadUsers();
+    } else {
+        document.getElementById("msg").innerText = data.error || "Failed to delete user";
+    }
+}
+</script>
+
+</body>
+</html>

@@ -29,3 +29,12 @@ Simple IoT system with Flask, MQTT, and PostgreSQL
 ## System Diagram
 ![System Diagram](docs/SystemDigram.png)
 
+## How to Run
+
+Follow these steps to run the project:
+
+### 1. Start Docker Services (Database + MQTT + Telemetry Service)
+
+```bash
+cd service
+docker compose up --build

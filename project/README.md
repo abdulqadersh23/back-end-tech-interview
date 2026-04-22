@@ -33,8 +33,42 @@ Simple IoT system with Flask, MQTT, and PostgreSQL
 
 Follow these steps to run the project:
 
-### 1. Start Docker Services (Database + MQTT + Telemetry Service)
+### Requirements
+- Docker Desktop
+- Python 3.10+
+- pip
 
+---
+
+### 1. Start Docker Services
+This will run PostgreSQL, MQTT Broker, and Telemetry Service.
 ```bash
 cd service
 docker compose up --build
+```
+
+### 2. Run API Server
+```bash
+cd api
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python app.py
+```
+
+### 3. Run Device Emulator
+```bash
+cd device_emulatour
+docker build -t device_emu .
+docker run --env-file .env --network service_default device_emu
+```
+
+### 4. Open Application
+```text
+-http://localhost:5000
+```
+
+### 5. Login Example
+Email: admin@test.com
+Password: 123456
+

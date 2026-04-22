@@ -65,7 +65,7 @@ docker run --env-file .env --network service_default device_emu
 
 ### 4. Open Application
 ```text
--http://localhost:5000
+http://localhost:5000
 ```
 
 ### 5. Login Example
